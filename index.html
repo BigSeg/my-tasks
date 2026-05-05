@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="My Tasks">
+<title>My Tasks</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f3;
+    --bg-tertiary: #eeede9;
+    --text: #1a1a1a;
+    --text-secondary: #666660;
+    --text-tertiary: #999993;
+    --border: rgba(0,0,0,0.12);
+    --border-med: rgba(0,0,0,0.22);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1e;
+      --bg-secondary: #2c2c2e;
+      --bg-tertiary: #3a3a3c;
+      --text: #f2f2f7;
+      --text-secondary: #aeaeb2;
+      --text-tertiary: #6e6e73;
+      --border: rgba(255,255,255,0.12);
+      --border-med: rgba(255,255,255,0.22);
+    }
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg-secondary);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 2rem;
+  }
+
+  #app {
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin-bottom: 1.5rem;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1.25rem;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    padding: 10px 14px;
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    font-family: var(--font);
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--text-secondary);
+  }
+
+  button.primary {
+    padding: 10px 18px;
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-md);
+    background: var(--text);
+    color: var(--bg);
+    font-size: 15px;
+    font-family: var(--font);
+    cursor: pointer;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .filters {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1rem;
+  }
+
+  .filter-btn {
+    font-size: 12px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border-med);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: var(--font);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .filter-btn.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: transparent;
+  }
+
+  .todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 40px;
+  }
+
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .todo-item.done { opacity: 0.5; }
+
+  .todo-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-med);
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .todo-check.checked {
+    background: var(--text);
+    border-color: var(--text);
+  }
+
+  .check-mark { display: none; width: 12px; height: 12px; }
+  .todo-check.checked .check-mark { display: block; }
+
+  .todo-text {
+    flex: 1;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .todo-item.done .todo-text {
+    text-decoration: line-through;
+    color: var(--text-tertiary);
+  }
+
+  .todo-delete {
+    color: var(--text-tertiary);
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 4px 8px;
+    font-size: 16px;
+    border-radius: 4px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 2.5rem;
+    color: var(--text-tertiary);
+    font-size: 14px;
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  .clear-btn {
+    font-size: 12px;
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    font-family: var(--font);
+  }
+
+  .settings-card {
+    margin-top: 2rem;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 13px 16px;
+    background: var(--bg-secondary);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .settings-header span { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+  .settings-arrow { font-size: 12px; color: var(--text-tertiary); }
+
+  .settings-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .setting-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .method-tabs { display: flex; gap: 6px; }
+
+  .method-tab {
+    flex: 1;
+    padding: 9px;
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-md);
+    background: transparent;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-align: center;
+    font-family: var(--font);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .method-tab.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: transparent;
+  }
+
+  .field-hint {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 5px;
+    line-height: 1.4;
+  }
+
+  .notify-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border-med);
+    border-radius: 22px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .toggle-slider:before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+
+  input:checked + .toggle-slider { background: #34c759; }
+  input:checked + .toggle-slider:before { transform: translateX(18px); }
+
+  .toggle-label { font-size: 14px; color: var(--text); }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: var(--bg);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-family: var(--font);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 99;
+  }
+
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>My Tasks</h1>
+  <p class="subtitle" id="date-label"></p>
+
+  <div class="input-row">
+    <input type="text" id="new-task" placeholder="Add a new task..." />
+    <button class="primary" onclick="addTask()">Add</button>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('active',this)">Active</button>
+    <button class="filter-btn" onclick="setFilter('done',this)">Done</button>
+  </div>
+
+  <div class="todo-list" id="todo-list"></div>
+
+  <div class="footer">
+    <span id="count-label"></span>
+    <button class="clear-btn" onclick="clearDone()">Clear completed</button>
+  </div>
+
+  <div class="settings-card">
+    <div class="settings-header" onclick="toggleSettings()">
+      <span>Notification settings</span>
+      <span class="settings-arrow" id="settings-arrow">▾</span>
+    </div>
+    <div class="settings-body" id="settings-body">
+
+      <div>
+        <div class="notify-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="notify-enabled" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label">Notify on task completion</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="setting-label">Notification method</div>
+        <div class="method-tabs">
+          <button class="method-tab active" id="tab-whatsapp" onclick="setMethod('whatsapp')">WhatsApp</button>
+          <button class="method-tab" id="tab-email" onclick="setMethod('email')">Email</button>
+        </div>
+      </div>
+
+      <div id="whatsapp-fields">
+        <div class="setting-label">Phone number (with country code)</div>
+        <input type="text" id="wa-number" placeholder="e.g. 18085551234" />
+        <div class="field-hint">Include country code, no + or spaces. Hawaii example: 18085551234</div>
+      </div>
+
+      <div id="email-fields" style="display:none;">
+        <div class="setting-label">Recipient email</div>
+        <input type="text" id="email-to" placeholder="e.g. boss@example.com" style="margin-bottom:10px;" />
+        <div class="setting-label">Your email (sender — optional)</div>
+        <input type="text" id="email-from" placeholder="e.g. you@example.com" />
+        <div class="field-hint">Opens your mail app with a pre-filled completion message</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+  if (tasks.length === 0) {
+    tasks = [
+      { id: 1, text: 'Complete this task to test notifications', done: false },
+      { id: 2, text: 'Set your recipient in settings below', done: false },
+    ];
+  }
+  let filter = 'all';
+  let nextId = Math.max(0, ...tasks.map(t => t.id)) + 1;
+  let method = localStorage.getItem('method') || 'whatsapp';
+  let settingsOpen = true;
+
+  document.getElementById('date-label').textContent = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric'
+  });
+
+  function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }
+
+  function loadSettings() {
+    const waNum = localStorage.getItem('wa-number') || '';
+    const emailTo = localStorage.getItem('email-to') || '';
+    const emailFrom = localStorage.getItem('email-from') || '';
+    const notifyEnabled = localStorage.getItem('notify-enabled') !== 'false';
+    document.getElementById('wa-number').value = waNum;
+    document.getElementById('email-to').value = emailTo;
+    document.getElementById('email-from').value = emailFrom;
+    document.getElementById('notify-enabled').checked = notifyEnabled;
+    setMethod(method);
+  }
+
+  function saveSettingsData() {
+    localStorage.setItem('wa-number', document.getElementById('wa-number').value);
+    localStorage.setItem('email-to', document.getElementById('email-to').value);
+    localStorage.setItem('email-from', document.getElementById('email-from').value);
+    localStorage.setItem('notify-enabled', document.getElementById('notify-enabled').checked);
+    localStorage.setItem('method', method);
+  }
+
+  document.getElementById('wa-number').addEventListener('input', saveSettingsData);
+  document.getElementById('email-to').addEventListener('input', saveSettingsData);
+  document.getElementById('email-from').addEventListener('input', saveSettingsData);
+  document.getElementById('notify-enabled').addEventListener('change', saveSettingsData);
+
+  function setMethod(m) {
+    method = m;
+    document.getElementById('tab-whatsapp').classList.toggle('active', m === 'whatsapp');
+    document.getElementById('tab-email').classList.toggle('active', m === 'email');
+    document.getElementById('whatsapp-fields').style.display = m === 'whatsapp' ? 'block' : 'none';
+    document.getElementById('email-fields').style.display = m === 'email' ? 'block' : 'none';
+    saveSettingsData();
+  }
+
+  function toggleSettings() {
+    settingsOpen = !settingsOpen;
+    document.getElementById('settings-body').style.display = settingsOpen ? 'flex' : 'none';
+    document.getElementById('settings-arrow').textContent = settingsOpen ? '▴' : '▾';
+  }
+
+  function sendNotification(taskText) {
+    const enabled = document.getElementById('notify-enabled').checked;
+    if (!enabled) return;
+    const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const msg = `Task completed: "${taskText}" — ${time}`;
+
+    if (method === 'whatsapp') {
+      const num = document.getElementById('wa-number').value.trim();
+      if (!num) { showToast('Add a WhatsApp number in settings'); return; }
+      window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+      showToast('Opening WhatsApp...');
+    } else {
+      const to = document.getElementById('email-to').value.trim();
+      if (!to) { showToast('Add a recipient email in settings'); return; }
+      const from = document.getElementById('email-from').value.trim();
+      const subject = encodeURIComponent('Task completed');
+      const body = encodeURIComponent(msg);
+      const mailto = `mailto:${to}${from ? '?from=' + encodeURIComponent(from) + '&' : '?'}subject=${subject}&body=${body}`;
+      window.open(mailto, '_blank');
+      showToast('Opening email...');
+    }
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function render() {
+    const list = document.getElementById('todo-list');
+    const visible = tasks.filter(t =>
+      filter === 'all' ? true : filter === 'done' ? t.done : !t.done
+    );
+    const active = tasks.filter(t => !t.done).length;
+    document.getElementById('count-label').textContent =
+      active === 1 ? '1 task left' : `${active} tasks left`;
+
+    if (visible.length === 0) {
+      list.innerHTML = `<div class="empty">${filter === 'done' ? 'No completed tasks yet' : 'No tasks — add one above'}</div>`;
+      return;
+    }
+
+    list.innerHTML = visible.map(t => `
+      <div class="todo-item ${t.done ? 'done' : ''}">
+        <div class="todo-check ${t.done ? 'checked' : ''}" onclick="toggle(${t.id})">
+          <svg class="check-mark" viewBox="0 0 12 12" fill="none">
+            <polyline points="1.5,6 4.5,9 10.5,3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="todo-text">${t.text}</span>
+        <button class="todo-delete" onclick="remove(${t.id})">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function addTask() {
+    const input = document.getElementById('new-task');
+    const text = input.value.trim();
+    if (!text) return;
+    tasks.unshift({ id: nextId++, text, done: false });
+    input.value = '';
+    saveTasks();
+    render();
+  }
+
+  function toggle(id) {
+    const t = tasks.find(t => t.id === id);
+    if (!t) return;
+    const wasUndone = !t.done;
+    t.done = !t.done;
+    saveTasks();
+    if (wasUndone) sendNotification(t.text);
+    render();
+  }
+
+  function remove(id) {
+    tasks = tasks.filter(t => t.id !== id);
+    saveTasks();
+    render();
+  }
+
+  function clearDone() {
+    tasks = tasks.filter(t => !t.done);
+    saveTasks();
+    render();
+  }
+
+  function setFilter(f, btn) {
+    filter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  document.getElementById('new-task').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTask();
+  });
+
+  loadSettings();
+  render();
+</script>
+</body>
+</html>
